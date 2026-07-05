@@ -6,6 +6,13 @@ type Props = {
   providerStats: ProviderStats[];
 };
 
+function priceScore(provider: unknown, model: string, fallback?: { input_per_1m: number; output_per_1m: number }) {
+  const maybeProvider = provider as { pricing?: Record<string, { input_per_1m: number; output_per_1m: number }> } | undefined;
+  const providerPrice = maybeProvider?.pricing?.[model];
+  const price = providerPrice ?? fallback;
+  return price ? price.input_per_1m + price.output_per_1m : Number.MAX_SAFE_INTEGER;
+}
+
 export function RoutePreviewPanel({ config, providerStats }: Props) {
   const [model, setModel] = useState("");
 
@@ -21,7 +28,7 @@ export function RoutePreviewPanel({ config, providerStats }: Props) {
 
     const providerMap = new Map(config.providers.map((provider) => [provider.id, provider]));
     const latencyMap = new Map(providerStats.map((item) => [item.provider_id, item.avg_latency_ms]));
-    const pricing = config.pricing?.[upstream];
+    const fallbackPrice = config.pricing?.[upstream];
 
     const providerOrder = route.providers
       .filter((id) => providerMap.get(id)?.enabled)
@@ -29,7 +36,7 @@ export function RoutePreviewPanel({ config, providerStats }: Props) {
         const providerA = providerMap.get(a);
         const providerB = providerMap.get(b);
 
-        if (route.strategy === "weighted") {
+        if (route.strategy === "weighted" || route.strategy === "weighted_random") {
           return (providerB?.weight ?? 0) - (providerA?.weight ?? 0);
         }
 
@@ -39,9 +46,10 @@ export function RoutePreviewPanel({ config, providerStats }: Props) {
           if (latencyA !== latencyB) return latencyA - latencyB;
         }
 
-        if (route.strategy === "cheapest" && pricing) {
-          // Pricing is model-level today, so priority breaks ties until provider-level pricing exists.
-          return (providerA?.priority ?? 999999) - (providerB?.priority ?? 999999);
+        if (route.strategy === "cheapest") {
+          const scoreA = priceScore(providerA, upstream, fallbackPrice);
+          const scoreB = priceScore(providerB, upstream, fallbackPrice);
+          if (scoreA !== scoreB) return scoreA - scoreB;
         }
 
         return (providerA?.priority ?? 999999) - (providerB?.priority ?? 999999);
@@ -53,7 +61,8 @@ export function RoutePreviewPanel({ config, providerStats }: Props) {
       upstream,
       strategy: route.strategy,
       providerOrder,
-      latencies: Object.fromEntries(providerOrder.map((id) => [id, latencyMap.get(id) ?? null]))
+      latencies: Object.fromEntries(providerOrder.map((id) => [id, latencyMap.get(id) ?? null])),
+      note: route.strategy === "round_robin" ? "Server rotates provider order per request. Local preview shows priority base order." : undefined
     };
   }, [config, model, providerStats]);
 
