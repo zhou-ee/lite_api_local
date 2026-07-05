@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
+import { AliasEditor } from "./components/AliasEditor";
 import { LogTable } from "./components/LogTable";
 import { ProviderEditor } from "./components/ProviderEditor";
 import { ProviderTable } from "./components/ProviderTable";
@@ -18,6 +19,7 @@ function App() {
   const [modelStats, setModelStats] = useState<ModelStats[]>([]);
   const [providers, setProviders] = useState<ProviderConfig[]>([]);
   const [routes, setRoutes] = useState<Record<string, RouteConfig>>({});
+  const [aliases, setAliases] = useState<Record<string, string>>({});
   const [logs, setLogs] = useState<RequestLog[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -26,13 +28,14 @@ function App() {
     setLoading(true);
     setError(null);
     try {
-      const [healthResult, statsResult, providerStatsResult, modelStatsResult, providersResult, routesResult, logsResult] = await Promise.all([
+      const [healthResult, statsResult, providerStatsResult, modelStatsResult, providersResult, routesResult, aliasesResult, logsResult] = await Promise.all([
         gatewayApi.health(),
         gatewayApi.statsToday(),
         gatewayApi.statsProviders(),
         gatewayApi.statsModels(),
         gatewayApi.providers(),
         gatewayApi.routes(),
+        gatewayApi.aliases(),
         gatewayApi.logs(50)
       ]);
 
@@ -42,6 +45,7 @@ function App() {
       setModelStats(modelStatsResult.data ?? []);
       setProviders(providersResult.data ?? []);
       setRoutes(routesResult.data ?? {});
+      setAliases(aliasesResult.data ?? {});
       setLogs(logsResult.data ?? []);
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
@@ -57,6 +61,11 @@ function App() {
 
   async function saveRoutes(nextRoutes: Record<string, RouteConfig>) {
     await gatewayApi.updateRoutes(nextRoutes);
+    await refresh();
+  }
+
+  async function saveAliases(nextAliases: Record<string, string>) {
+    await gatewayApi.updateAliases(nextAliases);
     await refresh();
   }
 
@@ -87,6 +96,7 @@ function App() {
       <StatusCards health={health} stats={stats} />
       <StatsTables providerStats={providerStats} modelStats={modelStats} />
       <ProviderEditor providers={providers} onSave={saveProvider} onHealthcheck={healthcheckProvider} />
+      <AliasEditor aliases={aliases} onSave={saveAliases} />
       <RouteEditor providers={providers} routes={routes} onSave={saveRoutes} />
       <ProviderTable providers={providers} />
       <RouteTable routes={routes} />
@@ -96,7 +106,6 @@ function App() {
         <h2>Next modules</h2>
         <ul>
           <li>ccswitch / Claude Code / Codex / OpenCode importers</li>
-          <li>Alias editor</li>
           <li>WebSocket realtime request stream</li>
           <li>Tauri desktop packaging</li>
         </ul>
