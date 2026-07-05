@@ -5,6 +5,11 @@ type Props = {
   modelStats: ModelStats[];
 };
 
+function money(value?: number) {
+  if (value === undefined || value === null) return "-";
+  return `$${value.toFixed(6)}`;
+}
+
 export function StatsTables({ providerStats, modelStats }: Props) {
   return (
     <div className="grid two">
@@ -18,6 +23,7 @@ export function StatsTables({ providerStats, modelStats }: Props) {
               <th>Success</th>
               <th>Errors</th>
               <th>Tokens</th>
+              <th>Cost</th>
               <th>Avg Latency</th>
             </tr>
           </thead>
@@ -29,10 +35,11 @@ export function StatsTables({ providerStats, modelStats }: Props) {
                 <td>{item.success_count}</td>
                 <td>{item.error_count}</td>
                 <td>{item.total_tokens}</td>
+                <td>{money(item.estimated_cost_usd)}</td>
                 <td>{Math.round(item.avg_latency_ms)}ms</td>
               </tr>
             ))}
-            {providerStats.length === 0 && <tr><td colSpan={6}>No provider stats yet.</td></tr>}
+            {providerStats.length === 0 && <tr><td colSpan={7}>No provider stats yet.</td></tr>}
           </tbody>
         </table>
       </section>
@@ -47,6 +54,7 @@ export function StatsTables({ providerStats, modelStats }: Props) {
               <th>Requests</th>
               <th>Errors</th>
               <th>Tokens</th>
+              <th>Cost</th>
               <th>Avg Latency</th>
             </tr>
           </thead>
@@ -58,10 +66,11 @@ export function StatsTables({ providerStats, modelStats }: Props) {
                 <td>{item.request_count}</td>
                 <td>{item.error_count}</td>
                 <td>{item.total_tokens}</td>
+                <td>{money(item.estimated_cost_usd)}</td>
                 <td>{Math.round(item.avg_latency_ms)}ms</td>
               </tr>
             ))}
-            {modelStats.length === 0 && <tr><td colSpan={6}>No model stats yet.</td></tr>}
+            {modelStats.length === 0 && <tr><td colSpan={7}>No model stats yet.</td></tr>}
           </tbody>
         </table>
       </section>
