@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { AliasEditor } from "./components/AliasEditor";
+import { ConfigJsonEditor } from "./components/ConfigJsonEditor";
 import { LogTable } from "./components/LogTable";
 import { ProviderEditor } from "./components/ProviderEditor";
 import { ProviderTable } from "./components/ProviderTable";
@@ -9,11 +10,12 @@ import { RouteTable } from "./components/RouteTable";
 import { StatsTables } from "./components/StatsTables";
 import { StatusCards } from "./components/StatusCards";
 import { gatewayApi } from "./lib/gatewayApi";
-import type { ModelStats, ProviderConfig, ProviderStats, RequestLog, RouteConfig } from "./lib/schema";
+import type { AppConfig, ModelStats, ProviderConfig, ProviderStats, RequestLog, RouteConfig } from "./lib/schema";
 import "./style.css";
 
 function App() {
   const [health, setHealth] = useState<unknown>(null);
+  const [config, setConfig] = useState<AppConfig | null>(null);
   const [stats, setStats] = useState<Record<string, unknown> | null>(null);
   const [providerStats, setProviderStats] = useState<ProviderStats[]>([]);
   const [modelStats, setModelStats] = useState<ModelStats[]>([]);
@@ -28,8 +30,9 @@ function App() {
     setLoading(true);
     setError(null);
     try {
-      const [healthResult, statsResult, providerStatsResult, modelStatsResult, providersResult, routesResult, aliasesResult, logsResult] = await Promise.all([
+      const [healthResult, configResult, statsResult, providerStatsResult, modelStatsResult, providersResult, routesResult, aliasesResult, logsResult] = await Promise.all([
         gatewayApi.health(),
+        gatewayApi.config(),
         gatewayApi.statsToday(),
         gatewayApi.statsProviders(),
         gatewayApi.statsModels(),
@@ -40,6 +43,7 @@ function App() {
       ]);
 
       setHealth(healthResult);
+      setConfig(configResult);
       setStats(statsResult);
       setProviderStats(providerStatsResult.data ?? []);
       setModelStats(modelStatsResult.data ?? []);
@@ -66,6 +70,11 @@ function App() {
 
   async function saveAliases(nextAliases: Record<string, string>) {
     await gatewayApi.updateAliases(nextAliases);
+    await refresh();
+  }
+
+  async function saveConfig(nextConfig: AppConfig) {
+    await gatewayApi.updateConfig(nextConfig);
     await refresh();
   }
 
@@ -98,6 +107,7 @@ function App() {
       <ProviderEditor providers={providers} onSave={saveProvider} onHealthcheck={healthcheckProvider} />
       <AliasEditor aliases={aliases} onSave={saveAliases} />
       <RouteEditor providers={providers} routes={routes} onSave={saveRoutes} />
+      <ConfigJsonEditor config={config} onSave={saveConfig} />
       <ProviderTable providers={providers} />
       <RouteTable routes={routes} />
       <LogTable logs={logs} />
