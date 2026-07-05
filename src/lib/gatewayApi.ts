@@ -1,5 +1,6 @@
 import type {
   AppConfig,
+  DiagnosticReport,
   HealthcheckResult,
   ModelStats,
   ProviderConfig,
@@ -29,6 +30,7 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
 export const gatewayApi = {
   health: () => fetch(`${BASE}/healthz`).then((r) => r.json()),
   config: () => request<AppConfig>("/admin/config"),
+  diagnostics: () => request<DiagnosticReport>("/admin/diagnostics"),
   updateConfig: (config: AppConfig) => request<{ ok: boolean }>("/admin/config", {
     method: "PUT",
     body: JSON.stringify(config)
