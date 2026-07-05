@@ -22,6 +22,14 @@ export type PricingConfig = {
   output_per_1m: number;
 };
 
+export type ClientConfig = {
+  api_key: string;
+  allowed_models: string[];
+  max_daily_requests?: number | null;
+  max_daily_tokens?: number | null;
+  max_daily_cost_usd?: number | null;
+};
+
 export type AppConfig = {
   server: {
     bind: string;
@@ -35,10 +43,7 @@ export type AppConfig = {
   providers: ProviderConfig[];
   aliases: Record<string, string>;
   routes: Record<string, RouteConfig>;
-  clients: Record<string, {
-    api_key: string;
-    allowed_models: string[];
-  }>;
+  clients: Record<string, ClientConfig>;
   pricing?: Record<string, PricingConfig>;
 };
 
