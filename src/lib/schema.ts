@@ -17,6 +17,11 @@ export type RouteConfig = {
   providers: string[];
 };
 
+export type PricingConfig = {
+  input_per_1m: number;
+  output_per_1m: number;
+};
+
 export type AppConfig = {
   server: {
     bind: string;
@@ -34,6 +39,7 @@ export type AppConfig = {
     api_key: string;
     allowed_models: string[];
   }>;
+  pricing?: Record<string, PricingConfig>;
 };
 
 export type RequestLog = {
@@ -58,6 +64,7 @@ export type ProviderStats = {
   success_count: number;
   error_count: number;
   total_tokens: number;
+  estimated_cost_usd?: number;
   avg_latency_ms: number;
 };
 
@@ -68,6 +75,7 @@ export type ModelStats = {
   success_count: number;
   error_count: number;
   total_tokens: number;
+  estimated_cost_usd?: number;
   avg_latency_ms: number;
 };
 
