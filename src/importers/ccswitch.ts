@@ -1,4 +1,4 @@
-import type { AppConfig, ProviderConfig } from "../lib/schema";
+import type { AppConfig, ProviderConfig, RouteConfig } from "../lib/schema";
 
 export type ImportResult = {
   providers: ProviderConfig[];
@@ -44,7 +44,7 @@ function normalizeProvider(candidate: AnyRecord, index: number): ProviderConfig 
     asString(candidate.apiKey) ??
     asString(candidate.key) ??
     asString(candidate.token) ??
-    "replace-with-provider-key";
+    "__REPLACE_ME__";
 
   return {
     id,
@@ -88,6 +88,32 @@ function collectAliases(raw: unknown): Record<string, string> {
   );
 }
 
+function routesFromProviders(providers: ProviderConfig[], existingRoutes: Record<string, RouteConfig>): Record<string, RouteConfig> {
+  const routes = { ...existingRoutes };
+
+  for (const provider of providers) {
+    for (const model of provider.models) {
+      const current = routes[model];
+      if (!current) {
+        routes[model] = {
+          strategy: "priority_fallback",
+          providers: [provider.id]
+        };
+        continue;
+      }
+
+      if (!current.providers.includes(provider.id)) {
+        routes[model] = {
+          ...current,
+          providers: [...current.providers, provider.id]
+        };
+      }
+    }
+  }
+
+  return routes;
+}
+
 export function importCcSwitchConfig(raw: unknown): ImportResult {
   const candidates = collectCandidateArrays(raw);
   const providers = candidates
@@ -116,12 +142,32 @@ export function mergeImportIntoConfig(config: AppConfig, result: ImportResult): 
     providerMap.set(provider.id, provider);
   }
 
+  const providers = Array.from(providerMap.values());
+
   return {
     ...config,
-    providers: Array.from(providerMap.values()),
+    providers,
+    routes: routesFromProviders(result.providers, config.routes),
     aliases: {
       ...config.aliases,
       ...result.aliases
+    }
+  };
+}
+
+export function mergeProvidersAndRoutes(config: AppConfig, providers: ProviderConfig[], aliases: Record<string, string>): AppConfig {
+  const providerMap = new Map(config.providers.map((provider) => [provider.id, provider]));
+  for (const provider of providers) {
+    providerMap.set(provider.id, provider);
+  }
+
+  return {
+    ...config,
+    providers: Array.from(providerMap.values()),
+    routes: routesFromProviders(providers, config.routes),
+    aliases: {
+      ...config.aliases,
+      ...aliases
     }
   };
 }
