@@ -1,4 +1,12 @@
-import type { AppConfig, ProviderConfig, RequestLog, RouteConfig } from "./schema";
+import type {
+  AppConfig,
+  HealthcheckResult,
+  ModelStats,
+  ProviderConfig,
+  ProviderStats,
+  RequestLog,
+  RouteConfig
+} from "./schema";
 
 const BASE = import.meta.env.VITE_GATEWAY_ADMIN_URL ?? "http://127.0.0.1:8080";
 const TOKEN = import.meta.env.VITE_GATEWAY_ADMIN_TOKEN ?? "change-me-admin-token";
@@ -30,11 +38,16 @@ export const gatewayApi = {
     method: "POST",
     body: JSON.stringify(provider)
   }),
+  healthcheckProvider: (id: string) => request<HealthcheckResult>(`/admin/providers/${encodeURIComponent(id)}/healthcheck`, {
+    method: "POST"
+  }),
   routes: () => request<{ data: Record<string, RouteConfig> }>("/admin/routes"),
   updateRoutes: (routes: Record<string, RouteConfig>) => request<{ ok: boolean }>("/admin/routes", {
     method: "PUT",
     body: JSON.stringify(routes)
   }),
   logs: (limit = 100) => request<{ data: RequestLog[] }>(`/admin/logs?limit=${limit}`),
-  statsToday: () => request<Record<string, unknown>>("/admin/stats/today")
+  statsToday: () => request<Record<string, unknown>>("/admin/stats/today"),
+  statsProviders: () => request<{ data: ProviderStats[] }>("/admin/stats/providers"),
+  statsModels: () => request<{ data: ModelStats[] }>("/admin/stats/models")
 };
