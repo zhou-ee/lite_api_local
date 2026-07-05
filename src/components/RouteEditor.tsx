@@ -10,8 +10,10 @@ type Props = {
 const strategies = [
   { value: "priority_fallback", label: "priority_fallback · stable fallback order" },
   { value: "weighted", label: "weighted · higher weight first" },
+  { value: "round_robin", label: "round_robin · rotate provider order" },
+  { value: "weighted_random", label: "weighted_random · random by provider weight" },
   { value: "lowest_latency", label: "lowest_latency · uses server telemetry" },
-  { value: "cheapest", label: "cheapest · uses pricing config" }
+  { value: "cheapest", label: "cheapest · uses model/provider pricing" }
 ];
 
 export function RouteEditor({ providers, routes, onSave }: Props) {
