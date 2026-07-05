@@ -46,6 +46,11 @@ export const gatewayApi = {
     method: "PUT",
     body: JSON.stringify(routes)
   }),
+  aliases: () => request<{ data: Record<string, string> }>("/admin/aliases"),
+  updateAliases: (aliases: Record<string, string>) => request<{ ok: boolean }>("/admin/aliases", {
+    method: "PUT",
+    body: JSON.stringify(aliases)
+  }),
   logs: (limit = 100) => request<{ data: RequestLog[] }>(`/admin/logs?limit=${limit}`),
   statsToday: () => request<Record<string, unknown>>("/admin/stats/today"),
   statsProviders: () => request<{ data: ProviderStats[] }>("/admin/stats/providers"),
