@@ -8,6 +8,7 @@ import { LogTable } from "./components/LogTable";
 import { ProviderEditor } from "./components/ProviderEditor";
 import { ProviderTable } from "./components/ProviderTable";
 import { RouteEditor } from "./components/RouteEditor";
+import { RoutePreviewPanel } from "./components/RoutePreviewPanel";
 import { RouteTable } from "./components/RouteTable";
 import { StatsTables } from "./components/StatsTables";
 import { StatusCards } from "./components/StatusCards";
@@ -113,6 +114,7 @@ function App() {
       <ProviderEditor providers={providers} onSave={saveProvider} onHealthcheck={healthcheckProvider} />
       <AliasEditor aliases={aliases} onSave={saveAliases} />
       <RouteEditor providers={providers} routes={routes} onSave={saveRoutes} />
+      <RoutePreviewPanel config={config} providerStats={providerStats} />
       <CcSwitchImportPanel config={config} onSave={saveConfig} />
       <ConfigJsonEditor config={config} onSave={saveConfig} />
       <ProviderTable providers={providers} />
