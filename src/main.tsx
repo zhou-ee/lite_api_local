@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { AliasEditor } from "./components/AliasEditor";
+import { CcSwitchImportPanel } from "./components/CcSwitchImportPanel";
 import { ConfigJsonEditor } from "./components/ConfigJsonEditor";
 import { LogTable } from "./components/LogTable";
 import { ProviderEditor } from "./components/ProviderEditor";
@@ -95,7 +96,7 @@ function App() {
         <div>
           <p className="eyebrow">lite_api_local</p>
           <h1>Lite API Control Plane</h1>
-          <p>本地控制台：查看服务器状态、Provider、模型路由和请求日志。本地关闭不影响服务器继续转发和记录日志。</p>
+          <p>Local control panel for providers, routes, aliases, imports, stats and logs.</p>
         </div>
         <button onClick={refresh} disabled={loading}>{loading ? "Refreshing..." : "Refresh"}</button>
       </header>
@@ -107,19 +108,11 @@ function App() {
       <ProviderEditor providers={providers} onSave={saveProvider} onHealthcheck={healthcheckProvider} />
       <AliasEditor aliases={aliases} onSave={saveAliases} />
       <RouteEditor providers={providers} routes={routes} onSave={saveRoutes} />
+      <CcSwitchImportPanel config={config} onSave={saveConfig} />
       <ConfigJsonEditor config={config} onSave={saveConfig} />
       <ProviderTable providers={providers} />
       <RouteTable routes={routes} />
       <LogTable logs={logs} />
-
-      <section className="card muted">
-        <h2>Next modules</h2>
-        <ul>
-          <li>ccswitch / Claude Code / Codex / OpenCode importers</li>
-          <li>WebSocket realtime request stream</li>
-          <li>Tauri desktop packaging</li>
-        </ul>
-      </section>
     </main>
   );
 }
