@@ -7,6 +7,13 @@ type Props = {
   onSave: (routes: Record<string, RouteConfig>) => Promise<void>;
 };
 
+const strategies = [
+  { value: "priority_fallback", label: "priority_fallback · stable fallback order" },
+  { value: "weighted", label: "weighted · higher weight first" },
+  { value: "lowest_latency", label: "lowest_latency · uses server telemetry" },
+  { value: "cheapest", label: "cheapest · uses pricing config" }
+];
+
 export function RouteEditor({ providers, routes, onSave }: Props) {
   const [model, setModel] = useState("");
   const [strategy, setStrategy] = useState("priority_fallback");
@@ -46,10 +53,9 @@ export function RouteEditor({ providers, routes, onSave }: Props) {
 
           <label>Strategy</label>
           <select value={strategy} onChange={(e) => setStrategy(e.target.value)}>
-            <option value="priority_fallback">priority_fallback</option>
-            <option value="weighted" disabled>weighted · later</option>
-            <option value="lowest_latency" disabled>lowest_latency · later</option>
-            <option value="cheapest" disabled>cheapest · later</option>
+            {strategies.map((item) => (
+              <option key={item.value} value={item.value}>{item.label}</option>
+            ))}
           </select>
 
           <label>Providers, comma separated</label>
