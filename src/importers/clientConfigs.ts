@@ -1,4 +1,4 @@
-import type { AppConfig, ProviderConfig } from "../lib/schema";
+import type { AppConfig, ProviderConfig, RouteConfig } from "../lib/schema";
 import type { ImportResult } from "./ccswitch";
 
 type AnyRecord = Record<string, unknown>;
@@ -50,6 +50,32 @@ function result(name: string, providers: ProviderConfig[], aliases: Record<strin
       Object.keys(aliases).length ? `${name}: imported ${Object.keys(aliases).length} alias candidate(s).` : `${name}: no aliases found.`
     ]
   };
+}
+
+function routesFromProviders(providers: ProviderConfig[], existingRoutes: Record<string, RouteConfig>): Record<string, RouteConfig> {
+  const routes = { ...existingRoutes };
+
+  for (const provider of providers) {
+    for (const model of provider.models) {
+      const current = routes[model];
+      if (!current) {
+        routes[model] = {
+          strategy: "priority_fallback",
+          providers: [provider.id]
+        };
+        continue;
+      }
+
+      if (!current.providers.includes(provider.id)) {
+        routes[model] = {
+          ...current,
+          providers: [...current.providers, provider.id]
+        };
+      }
+    }
+  }
+
+  return routes;
 }
 
 export function importClaudeCodeLike(raw: unknown): ImportResult {
@@ -121,15 +147,20 @@ export function importGeminiCliLike(raw: unknown): ImportResult {
 export function mergeImportResults(config: AppConfig, imports: ImportResult[]): AppConfig {
   const providerMap = new Map(config.providers.map((provider) => [provider.id, provider]));
   const aliases = { ...config.aliases };
+  const importedProviders: ProviderConfig[] = [];
 
   for (const importResult of imports) {
-    for (const provider of importResult.providers) providerMap.set(provider.id, provider);
+    for (const provider of importResult.providers) {
+      providerMap.set(provider.id, provider);
+      importedProviders.push(provider);
+    }
     Object.assign(aliases, importResult.aliases);
   }
 
   return {
     ...config,
     providers: Array.from(providerMap.values()),
+    routes: routesFromProviders(importedProviders, config.routes),
     aliases
   };
 }
