@@ -86,3 +86,18 @@ export type HealthcheckResult = {
   latency_ms?: number;
   error?: string;
 };
+
+export type DiagnosticLevel = "error" | "warning" | "info";
+
+export type DiagnosticItem = {
+  level: DiagnosticLevel;
+  code: string;
+  message: string;
+};
+
+export type DiagnosticReport = {
+  ok: boolean;
+  errors: number;
+  warnings: number;
+  items: DiagnosticItem[];
+};
