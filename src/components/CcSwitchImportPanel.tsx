@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { importCcSwitchConfig, mergeImportIntoConfig } from "../importers/ccswitch";
 import {
   importClaudeCodeLike,
@@ -16,11 +16,66 @@ type Props = {
 
 type ImportMode = "ccswitch" | "claude-code" | "codex" | "opencode" | "gemini-cli" | "auto";
 
+type ImportPlan = {
+  providerIds: string[];
+  aliases: Record<string, string>;
+  modelRoutes: Record<string, string[]>;
+  notes: string[];
+};
+
+function collectResults(raw: unknown, mode: ImportMode) {
+  return mode === "auto"
+    ? [
+        importCcSwitchConfig(raw),
+        importClaudeCodeLike(raw),
+        importCodexLike(raw),
+        importOpenCodeLike(raw),
+        importGeminiCliLike(raw)
+      ]
+    : [
+        mode === "ccswitch" ? importCcSwitchConfig(raw) :
+        mode === "claude-code" ? importClaudeCodeLike(raw) :
+        mode === "codex" ? importCodexLike(raw) :
+        mode === "opencode" ? importOpenCodeLike(raw) :
+        importGeminiCliLike(raw)
+      ];
+}
+
+function buildPlan(rawText: string, mode: ImportMode): ImportPlan | null {
+  if (!rawText.trim()) return null;
+  const raw = JSON.parse(rawText);
+  const results = collectResults(raw, mode);
+  const aliases = Object.assign({}, ...results.map((result) => result.aliases));
+  const providers = results.flatMap((result) => result.providers);
+  const modelRoutes: Record<string, string[]> = {};
+
+  for (const provider of providers) {
+    for (const model of provider.models) {
+      modelRoutes[model] = [...(modelRoutes[model] ?? []), provider.id];
+    }
+  }
+
+  return {
+    providerIds: Array.from(new Set(providers.map((provider) => provider.id))),
+    aliases,
+    modelRoutes,
+    notes: results.flatMap((result) => result.notes)
+  };
+}
+
 export function CcSwitchImportPanel({ config, onSave }: Props) {
   const [rawText, setRawText] = useState("");
   const [mode, setMode] = useState<ImportMode>("auto");
   const [notes, setNotes] = useState<string[]>([]);
   const [message, setMessage] = useState<string | null>(null);
+
+  const preview = useMemo(() => {
+    try {
+      return buildPlan(rawText, mode);
+    } catch {
+      return null;
+    }
+  }, [rawText, mode]);
 
   async function importConfig() {
     setMessage(null);
@@ -33,22 +88,7 @@ export function CcSwitchImportPanel({ config, onSave }: Props) {
 
     try {
       const raw = JSON.parse(rawText);
-      const results = mode === "auto"
-        ? [
-            importCcSwitchConfig(raw),
-            importClaudeCodeLike(raw),
-            importCodexLike(raw),
-            importOpenCodeLike(raw),
-            importGeminiCliLike(raw)
-          ]
-        : [
-            mode === "ccswitch" ? importCcSwitchConfig(raw) :
-            mode === "claude-code" ? importClaudeCodeLike(raw) :
-            mode === "codex" ? importCodexLike(raw) :
-            mode === "opencode" ? importOpenCodeLike(raw) :
-            importGeminiCliLike(raw)
-          ];
-
+      const results = collectResults(raw, mode);
       const merged = mode === "ccswitch" && results.length === 1
         ? mergeImportIntoConfig(config, results[0])
         : mergeImportResults(config, results);
@@ -79,8 +119,13 @@ export function CcSwitchImportPanel({ config, onSave }: Props) {
 
       <textarea value={rawText} onChange={(e) => setRawText(e.target.value)} placeholder='{"providers":[{"name":"my-api","base_url":"https://example.com/v1","models":["gpt-4o"]}]}' />
       <div className="row-actions top-gap">
-        <button onClick={importConfig} disabled={!rawText.trim() || !config}>Import into server config</button>
+        <button onClick={importConfig} disabled={!rawText.trim() || !config || !preview}>Import into server config</button>
       </div>
+
+      {preview && (
+        <pre>{JSON.stringify(preview, null, 2)}</pre>
+      )}
+
       {message && <p className="notice">{message}</p>}
       {notes.length > 0 && (
         <ul className="hint">
