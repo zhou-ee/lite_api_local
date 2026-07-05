@@ -51,3 +51,30 @@ export type RequestLog = {
   total_tokens?: number | null;
   estimated_cost_usd?: number | null;
 };
+
+export type ProviderStats = {
+  provider_id: string;
+  request_count: number;
+  success_count: number;
+  error_count: number;
+  total_tokens: number;
+  avg_latency_ms: number;
+};
+
+export type ModelStats = {
+  requested_model: string;
+  upstream_model: string;
+  request_count: number;
+  success_count: number;
+  error_count: number;
+  total_tokens: number;
+  avg_latency_ms: number;
+};
+
+export type HealthcheckResult = {
+  ok: boolean;
+  provider_id: string;
+  status?: number;
+  latency_ms?: number;
+  error?: string;
+};
