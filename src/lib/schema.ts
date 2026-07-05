@@ -101,3 +101,12 @@ export type DiagnosticReport = {
   warnings: number;
   items: DiagnosticItem[];
 };
+
+export type RoutePreview = {
+  ok: boolean;
+  requested_model: string;
+  upstream_model?: string;
+  provider_order?: string[];
+  latency_snapshot_ms?: Record<string, number>;
+  error?: string;
+};
