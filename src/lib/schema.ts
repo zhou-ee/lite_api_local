@@ -10,6 +10,7 @@ export type ProviderConfig = {
   weight: number;
   timeout_ms: number;
   models: string[];
+  pricing?: Record<string, PricingConfig>;
 };
 
 export type RouteConfig = {

@@ -77,6 +77,75 @@ export function ProviderEditor({ providers, onSave, onHealthcheck }: Props) {
           <label>Models, comma separated</label>
           <textarea value={draft.models.join(", ")} onChange={(e) => setDraft({ ...draft, models: e.target.value.split(",") })} />
 
+          {draft.models.map(m => m.trim()).filter(Boolean).length > 0 && (
+            <div style={{ marginTop: "1rem", marginBottom: "1rem" }}>
+              <label style={{ fontWeight: "bold" }}>Model Pricing Overrides per 1M tokens (Optional)</label>
+              <table style={{ width: "100%", marginTop: "0.5rem" }}>
+                <thead>
+                  <tr style={{ fontSize: "0.85em", opacity: 0.8 }}>
+                    <th style={{ textAlign: "left", paddingBottom: "4px" }}>Model</th>
+                    <th style={{ textAlign: "left", paddingBottom: "4px" }}>Input / 1M ($)</th>
+                    <th style={{ textAlign: "left", paddingBottom: "4px" }}>Output / 1M ($)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {draft.models.map(m => m.trim()).filter(Boolean).map((modelName) => {
+                    const price = draft.pricing?.[modelName] ?? { input_per_1m: 0, output_per_1m: 0 };
+                    return (
+                      <tr key={modelName}>
+                        <td style={{ padding: "4px 0" }}><code>{modelName}</code></td>
+                        <td style={{ padding: "4px 4px 4px 0" }}>
+                          <input
+                            type="number"
+                            step="0.000001"
+                            style={{ margin: 0, padding: "4px", width: "100%" }}
+                            value={price.input_per_1m || ""}
+                            placeholder="0"
+                            onChange={(e) => {
+                              const val = parseFloat(e.target.value) || 0;
+                              setDraft({
+                                ...draft,
+                                pricing: {
+                                  ...(draft.pricing ?? {}),
+                                  [modelName]: {
+                                    ...price,
+                                    input_per_1m: val
+                                  }
+                                }
+                              });
+                            }}
+                          />
+                        </td>
+                        <td style={{ padding: "4px 0" }}>
+                          <input
+                            type="number"
+                            step="0.000001"
+                            style={{ margin: 0, padding: "4px", width: "100%" }}
+                            value={price.output_per_1m || ""}
+                            placeholder="0"
+                            onChange={(e) => {
+                              const val = parseFloat(e.target.value) || 0;
+                              setDraft({
+                                ...draft,
+                                pricing: {
+                                  ...(draft.pricing ?? {}),
+                                  [modelName]: {
+                                    ...price,
+                                    output_per_1m: val
+                                  }
+                                }
+                              });
+                            }}
+                          />
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+
           <button onClick={save} disabled={!draft.id || !draft.base_url}>Save Provider</button>
           {message && <p className="notice">{message}</p>}
         </div>

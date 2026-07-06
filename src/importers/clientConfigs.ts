@@ -95,7 +95,7 @@ export function importClaudeCodeLike(raw: unknown): ImportResult {
     .filter(Boolean) as ProviderConfig[];
 
   const model = text(raw.model) ?? text(raw.default_model) ?? text(raw.defaultModel);
-  const aliases = model ? { claude: model } : {};
+  const aliases: Record<string, string> = model ? { claude: model } : {};
   return result("Claude Code", providers, aliases);
 }
 
@@ -108,7 +108,7 @@ export function importCodexLike(raw: unknown): ImportResult {
     .filter(Boolean) as ProviderConfig[];
 
   const model = text(raw.model) ?? text(raw.default_model) ?? text(raw.defaultModel);
-  const aliases = model ? { codex: model } : {};
+  const aliases: Record<string, string> = model ? { codex: model } : {};
   return result("Codex", providers, aliases);
 }
 
@@ -116,10 +116,12 @@ export function importOpenCodeLike(raw: unknown): ImportResult {
   if (!isRecord(raw)) return result("OpenCode", []);
 
   const providerRoot = isRecord(raw.provider) ? raw.provider : raw.providers;
-  const candidates = Array.isArray(providerRoot)
+  const candidates: AnyRecord[] = Array.isArray(providerRoot)
     ? providerRoot.filter(isRecord)
     : isRecord(providerRoot)
-      ? Object.entries(providerRoot).map(([id, value]) => isRecord(value) ? { id, ...value } : null).filter(isRecord)
+      ? Object.entries(providerRoot)
+          .map(([id, value]) => isRecord(value) ? ({ id, ...value } as AnyRecord) : null)
+          .filter((item): item is AnyRecord => item !== null)
       : [raw].filter(isRecord);
 
   const providers = candidates
@@ -127,7 +129,7 @@ export function importOpenCodeLike(raw: unknown): ImportResult {
     .filter(Boolean) as ProviderConfig[];
 
   const model = text(raw.model) ?? text(raw.default_model) ?? text(raw.defaultModel);
-  const aliases = model ? { opencode: model } : {};
+  const aliases: Record<string, string> = model ? { opencode: model } : {};
   return result("OpenCode", providers, aliases);
 }
 
@@ -140,7 +142,7 @@ export function importGeminiCliLike(raw: unknown): ImportResult {
     .filter(Boolean) as ProviderConfig[];
 
   const model = text(raw.model) ?? text(raw.default_model) ?? text(raw.defaultModel);
-  const aliases = model ? { gemini: model } : {};
+  const aliases: Record<string, string> = model ? { gemini: model } : {};
   return result("Gemini CLI", providers, aliases);
 }
 

@@ -1,14 +1,13 @@
 import { useMemo, useState } from "react";
-import type { AppConfig, ProviderStats } from "../lib/schema";
+import type { AppConfig, ProviderStats, ProviderConfig } from "../lib/schema";
 
 type Props = {
   config: AppConfig | null;
   providerStats: ProviderStats[];
 };
 
-function priceScore(provider: unknown, model: string, fallback?: { input_per_1m: number; output_per_1m: number }) {
-  const maybeProvider = provider as { pricing?: Record<string, { input_per_1m: number; output_per_1m: number }> } | undefined;
-  const providerPrice = maybeProvider?.pricing?.[model];
+function priceScore(provider: ProviderConfig | undefined, model: string, fallback?: { input_per_1m: number; output_per_1m: number }) {
+  const providerPrice = provider?.pricing?.[model];
   const price = providerPrice ?? fallback;
   return price ? price.input_per_1m + price.output_per_1m : Number.MAX_SAFE_INTEGER;
 }
