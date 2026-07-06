@@ -11,6 +11,10 @@ export type ProviderConfig = {
   timeout_ms: number;
   models: string[];
   pricing?: Record<string, PricingConfig>;
+  refresh_token?: string | null;
+  token_expiry?: number | null;
+  oauth_email?: string | null;
+  oauth_provider?: string | null;
 };
 
 export type RouteConfig = {
@@ -55,6 +59,7 @@ export type RequestLog = {
   provider_id: string;
   requested_model: string;
   upstream_model: string;
+  route_strategy?: string | null;
   status_code: number;
   error_type?: string | null;
   latency_ms: number;
