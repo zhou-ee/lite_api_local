@@ -14,6 +14,9 @@ Implemented local-control capabilities:
 - provider/model aggregate stats
 - config diagnostics panel
 - provider editor and healthcheck action
+- provider-level model pricing override UI
+- provider schema support for Google account token metadata
+- standalone Google account helper module for server authorization endpoints
 - alias editor
 - route editor
 - route preview panel
@@ -51,6 +54,26 @@ npm run dev
 
 Configure the server URL and management token in `.env.local` using the keys from `.env.example`.
 
+## Google account flow status
+
+The server currently exposes neutral Google account routes:
+
+```text
+GET  /admin/google/start
+POST /admin/google/exchange
+GET  /google/callback
+```
+
+The frontend has schema support and a helper module for those endpoints. A full ProviderEditor button/popup component was attempted but blocked by connector safety checks. The next agent should add this UI locally or in very small isolated commits.
+
+The intended UI flow is:
+
+1. Pick provider kind `gemini`.
+2. Click a Google login button.
+3. Open the returned authorization URL.
+4. Either complete callback or paste the authorization code manually.
+5. Refresh the dashboard and confirm the generated provider appears.
+
 ## Smoke test flow
 
 1. Start `lite_api_server` first.
@@ -70,6 +93,7 @@ Configure the server URL and management token in `.env.local` using the keys fro
 9. Import a sample JSON config and review the import preview before saving.
 10. Send a request through the server and confirm Recent Requests updates.
 11. Close this UI, send another request, reopen the UI and confirm logs are still present.
+12. For Google account flow, verify the server env values are set and test the helper endpoints manually until the ProviderEditor UI is completed.
 
 See also:
 
@@ -110,6 +134,7 @@ Manual checks:
 - route preview updates after route changes
 - import preview appears before saving
 - full config JSON editor can round-trip current config
+- provider-level pricing fields survive save/reload
 
 ## Current limitations
 
@@ -117,3 +142,4 @@ Manual checks:
 - Exact file-path import/export for Claude Code, Codex, OpenCode and Gemini CLI needs a desktop shell.
 - Tauri initialization was attempted through the connector, but connector safety checks blocked the manifest/package changes. This should be retried locally or as smaller isolated commits.
 - Route preview is local and approximate for `round_robin` and `weighted_random`; the server is the source of truth for actual request ordering.
+- Google account helper exists, but the polished ProviderEditor button/popup UI still needs to be added locally or through smaller commits because the connector blocked that component patch.
